@@ -44,7 +44,8 @@ async fn home() -> Result {
                     <span data-text="$count"></span>
                 </h1>
 
-                <button data-on:click="@post('/increment')">"Increment"</button>
+                <button data-on:click="@post('/inc')">"Increment"</button>
+                <button data-on:click="@post('/dec')">"decrement"</button>
 
                 <ol id="log"></ol>
             </body>
@@ -80,6 +81,30 @@ async fn increment(
             .mode(ElementPatchMode::Append)
             .into()),
     ]);
+
+    Ok(Sse::new(events))
+}
+
+#[route(POST "/inc")]
+async fn inc(
+    Signals(counter): Signals<Counter>,
+) -> Result<Sse<impl Stream<Item = Result<Event>> + use<>>> {
+    let count = counter.count + 1;
+
+    // Convert PatchSignals to Event using .map(Event::from) or .map(Into::into)
+    let events = stream::iter([PatchSignals::json(&Counter { count }).map(Event::from)]);
+
+    Ok(Sse::new(events))
+}
+
+#[route(POST "/dec")]
+async fn dec(
+    Signals(counter): Signals<Counter>,
+) -> Result<Sse<impl Stream<Item = Result<Event>> + use<>>> {
+    let count = counter.count - 1;
+
+    // Convert PatchSignals to Event using .map(Event::from) or .map(Into::into)
+    let events = stream::iter([PatchSignals::json(&Counter { count }).map(Event::from)]);
 
     Ok(Sse::new(events))
 }
