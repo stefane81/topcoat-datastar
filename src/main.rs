@@ -101,7 +101,11 @@ async fn inc(
 async fn dec(
     Signals(counter): Signals<Counter>,
 ) -> Result<Sse<impl Stream<Item = Result<Event>> + use<>>> {
-    let count = counter.count - 1;
+    // 1. Exit early if the incoming count is 0
+    let mut count = counter.count;
+    if count > 0 {
+        count -= 1;
+    }
 
     // Convert PatchSignals to Event using .map(Event::from) or .map(Into::into)
     let events = stream::iter([PatchSignals::json(&Counter { count }).map(Event::from)]);
